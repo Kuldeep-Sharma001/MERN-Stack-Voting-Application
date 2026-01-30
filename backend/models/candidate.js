@@ -38,5 +38,5 @@ const candidateSchema = new mongoose.Schema({
     }
 
 })
- const candidate = mongoose.model('candidate', candidateSchema);
- export default candidate;
+ const Candidate = mongoose.model('candidate', candidateSchema);
+ export default Candidate;

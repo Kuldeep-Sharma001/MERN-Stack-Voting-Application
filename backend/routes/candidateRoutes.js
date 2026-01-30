@@ -1,63 +1,87 @@
 import express from 'express';
 const router = express.Router();
-import candidate from '../models/candidate.js';
-import user from '../models/user.js'
-import {   generateToken } from '../jwt.js';
-const checkUserRole = async(id)=>{
-    const getUser = await user.findById(id);
-    if(getUser.role==='admin') return true;
-    else return false; 
+import Candidate from '../models/candidate.js';
+import User from '../models/user.js'; // Needed if you still want to delete users
+
+// Helper Middleware to check Admin Role
+const isAdmin = async (req, res, next) => {
+    try {
+        // Since we added role to the token payload, we check it directly
+        // If you prefer DB check: const user = await User.findById(req.user.id);
+        if(req.user.role !== 'admin'){
+             return res.status(403).json({message: 'Access Denied. Admins Only.'});
+        }
+        next();
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
 }
 
-router.post('/', async (req, res)=>{
-    try{
-        if(!(await checkUserRole(req.user.id))) return res.status(403).json({message : 'You are not authorized to perform this operation'});
+// ADD CANDIDATE
+router.post('/add-candidate', isAdmin, async (req, res) => {
+    try {
         const data = req.body;
-        const newCandidate = new candidate(data);
-        const response =await newCandidate.save();
-        console.log("Candidate data saved");
+        const newCandidate = new Candidate(data);
+        const response = await newCandidate.save();
+        
+        res.status(200).json({ success: true, message: "Candidate Added", response });
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+});
+
+//Get Candidate
+router.get('/get-candidate/:id',async (req, res)=>{
+    const id = req.params.id;
+    try {
+        const getCandidate = await Candidate.findById(id);
+        if(!getCandidate){
+            return res.status(404).json({success:false, message:'No Candidate found'});
+        }
         res.status(200).json({
-            message:"Candidate Data saved",
-            response
+            success:true,
+            message:'Candidate Found',
+            candidate:getCandidate
         })
-    }catch(error){
-        console.log(error);
+    } catch (error) {
         res.status(500).json({
-            message: "Something went wrong",
-            error
+            message:error.message,
+            success:false,
         })
     }
 })
-router.put('/update/:id',   async (req,res)=>{
-    try{
-        if(!checkUserRole(req.user.id)) return res.status(403).json({
-            message:"You are not authorize to perform this operation"
-        });
+
+// UPDATE CANDIDATE
+router.put('/update/:id', isAdmin, async (req, res) => {
+    try {
         const candidateID = req.params.id;
-        const candidateUpdatedData = req.body;
-        const response = await candidate.findByIdAndUpdate(candidateID, candidateUpdatedData,{
-            new:true, //Returns the updated document
-            runValidators:true //Validate mongoose validation
-        })
-        if(!response) return res.status(400).json({error:"Candidate not found"});
-        console.log('Candidate data updated \n', response);
-        res.json(response)
-    }catch(error){
-        console.log(error,"Could not update candidate data, Something went wrong");
-        res.status(500).json({message:"Could not update candidate data, Something went wrong"})
+        const updatedData = req.body;
+        const response = await Candidate.findByIdAndUpdate(candidateID, updatedData, {
+            new: true,
+            runValidators: true
+        });
+
+        if (!response) return res.status(404).json({ error: "Candidate not found" });
+
+        res.status(200).json({ success: true, message: 'Candidate Updated', response });
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error" });
     }
-})
-router.delete('/delete/:id',   async(req, res)=>{
-    try{
-            if(!checkUserRole(req.user.id)) return res.status(403).json({message:'You are not authorize to perform this operation'});
-            const candidateId = req.params.id;
-            const response = await candidate.deleteOne({_id:candidateId});
-            if(!response) res.status(404).json({message:'Candidate not found'})
-            console.log('Candidate deleted succussfully');
-            res.status(200).json({message:'Candidate deleted successfully', response});
-    }catch(error){
-        console.log('Candidate not found');
-        res.status(500).json({message:'Invalid id, candidate not found'});
+});
+
+// DELETE CANDIDATE
+router.delete('/delete/:id', isAdmin, async (req, res) => {
+    try {
+        const candidateId = req.params.id;
+        const response = await Candidate.findByIdAndDelete(candidateId);
+
+        if (!response) return res.status(404).json({ message: 'Candidate not found' });
+
+        res.status(200).json({ success: true, message: 'Candidate deleted' });
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error" });
     }
-})
+});
+
+
 export default router;
