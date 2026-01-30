@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import api from '../apiConfig.js';
 
 export default function Candidates() {
   const [data, setData] = useState([]);
@@ -11,7 +12,7 @@ export default function Candidates() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:3002/all-candidates");
+      const response = await fetch(`${api}/all-candidates`);
       const result = await response.json();
       setData(result.candidates);
     } catch (err) {
@@ -23,7 +24,7 @@ export default function Candidates() {
     if(!window.confirm("Delete this candidate?")) return;
     const loadingToast = toast.loading('Removing Candidate');
     try {
-      const response = await fetch(`http://localhost:3002/candidate/delete/${id}`, {
+      const response = await fetch(`${api}/candidate/delete/${id}`, {
         method: 'DELETE',
         headers: { authorization: token }
       });

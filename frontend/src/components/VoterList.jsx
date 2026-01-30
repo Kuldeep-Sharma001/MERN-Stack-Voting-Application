@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
+import api from '../apiConfig.js';
 
 export default function VoterList() {
     const token = useSelector(state => state.user.token);
@@ -12,7 +13,7 @@ export default function VoterList() {
     async function getVoters() {
         const loadingToast = toast.loading('Fetching Voters...');
         try {
-            const response = await fetch("http://localhost:3002/user/all-voters", {
+            const response = await fetch(`${api}/user/all-voters`, {
                 headers: { authorization: token }
             });
             const result = await response.json();
@@ -31,7 +32,7 @@ export default function VoterList() {
         if(!window.confirm("Are you sure you want to delete this voter?")) return;
         
         try {
-            const response = await fetch(`http://localhost:3002/user/delete-voter/${id}`, {
+            const response = await fetch(`${api}/user/delete-voter/${id}`, {
                 method: 'DELETE',
                 headers: { authorization: token }
             });

@@ -1,10 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-
 export default function Home() {
   const navigate = useNavigate();
   const isLogin = useSelector((state) => state.user.isLogin);
-
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-8rem)] px-6 lg:px-20 py-10 max-w-7xl mx-auto">
       {/* Text Section */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
+import api from '../apiConfig.js';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ export default function Register() {
         const loadingToast = toast.loading("Loading voter details...");
         try {
           const response = await fetch(
-            `http://localhost:3002/user/get-voter/${voterId}`,
+            `${api}/user/get-voter/${voterId}`,
             {
               headers: { authorization: token },
             },
@@ -61,8 +62,8 @@ export default function Register() {
       }
 
       const url = voterId
-        ? `http://localhost:3002/user/update-voter/${voterId}`
-        : "http://localhost:3002/user/register";
+        ? `${api}/user/update-voter/${voterId}`
+        : `${api}/user/register`;
 
       const method = voterId ? "PUT" : "POST";
       const headers = {

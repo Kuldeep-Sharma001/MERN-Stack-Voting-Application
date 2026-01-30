@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../app/slice/user";
+import api from '../apiConfig.js';
 
 export default function Vote() {
   const [candidates, setCandidates] = useState([]);
@@ -10,7 +11,7 @@ export default function Vote() {
   const dispatch = useDispatch();
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:3002/all-candidates");
+      const response = await fetch(`${api}/all-candidates`);
       const result = await response.json();
       setCandidates(result.candidates);
     } catch (err) {
@@ -20,7 +21,7 @@ export default function Vote() {
 
   const updateVoterDetails = async()=>{
     try{
-      const response = await fetch(`http://localhost:3002/user/get-voter/${voterId}`,{
+      const response = await fetch(`${api}/user/get-voter/${voterId}`,{
         method:'GET',
         headers:{authorization:token},}
       )
@@ -41,7 +42,7 @@ export default function Vote() {
   const handleVote = async (id) => {
     const loadingToast = toast.loading("Casting vote...");
     try {
-      const response = await fetch(`http://localhost:3002/user/vote/${id}`, {
+      const response = await fetch(`${api}/user/vote/${id}`, {
         method: "POST",
         headers: { authorization: token },
       });

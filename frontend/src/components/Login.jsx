@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
 import { setLogin, setToken, setUser } from "../app/slice/user";
 import toast from "react-hot-toast";
+import api from '../apiConfig.js';
 
 export default function Login() {
   const [formData, setFormData] = useState({ aadharCardNumber: "", password: "" });
@@ -16,7 +17,7 @@ export default function Login() {
     e.preventDefault();
     const loadingToast = toast.loading("Verifying credentials...");
     try {
-      const response = await fetch("http://localhost:3002/user/login", {
+      const response = await fetch(`${api}/user/login`, {
         method: "POST",
         body: JSON.stringify(formData),
         headers: { "Content-Type": "application/json" },

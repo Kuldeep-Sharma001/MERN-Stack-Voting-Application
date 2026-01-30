@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import api from '../apiConfig.js';
 
 export default function AddCandidate() {
   const [searchParams] = useSearchParams();
@@ -18,7 +19,7 @@ export default function AddCandidate() {
       const fetchCandidate = async () => {
         const loadToast = toast.loading('Loading candidate...');
         try {
-          const res = await fetch(`http://localhost:3002/candidate/get-candidate/${id}`, {
+          const res = await fetch(`${api}/candidate/get-candidate/${id}`, {
              headers: { authorization: token } 
           });
           const result = await res.json();
@@ -42,8 +43,8 @@ export default function AddCandidate() {
     
     try {
       const url = id 
-        ? `http://localhost:3002/candidate/update/${id}`
-        : "http://localhost:3002/candidate/add-candidate";
+        ? `${api}/candidate/update/${id}`
+        : `${api}/candidate/add-candidate`;
       
       const method = id ? "PUT" : "POST";
 

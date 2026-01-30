@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import api from '../apiConfig.js';
 
 export default function ChangePassword() {
   const [data, setData] = useState({ currentPassword: "", newPassword: "" });
@@ -12,7 +13,7 @@ export default function ChangePassword() {
     e.preventDefault();
     const loadToast = toast.loading('Updating password...');
     try {
-      const response = await fetch("http://localhost:3002/user/profile/password", {
+      const response = await fetch(`${api}/user/profile/password`, {
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json", authorization: token },
