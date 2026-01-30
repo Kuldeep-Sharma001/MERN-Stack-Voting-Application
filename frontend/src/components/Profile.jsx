@@ -1,61 +1,61 @@
-import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
+// Helper sub-component
+const InfoRow = ({ label, value, font = "" }) => (
+  <div className="flex justify-between items-center py-3 border-b border-white/5">
+    <span className="text-gray-400">{label}</span>
+    <span className={`text-white font-medium ${font}`}>{value}</span>
+  </div>
+);
+
 const Profile = () => {
-  const [user, setUser] = useState({});
   const navigate = useNavigate();
-  const api = "http://localhost:3002/user/profile";
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch(api, {
-          headers: { authorization: localStorage.getItem("token") },
-        });
-        const data = await response.json();
-        if (data.success) setUser(data.getUser);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  const fields = [
-    { label: "Name", value: user.name },
-    { label: "Age", value: user.age },
-    { label: "Email", value: user.email },
-    { label: "Mobile", value: user.mobile },
-    { label: "Aadhar No.", value: user.aadharCardNumber },
-    { label: "Voted", value: user.isVoted ? "✅ Yes" : "❌ No" },
-  ];
+  const user = useSelector(state => state.user.user);
+  if (!user) return null;
 
   return (
-    <>
-      <h1 className="text-5xl text-center mt-12 font-extrabold bg-linear-to-r from-violet-600 to-pink-400 bg-clip-text text-transparent">
-        Profile
-      </h1>
-
-      <div className="flex flex-col justify-center items-center w-[90vw] sm:w-[600px] mx-auto mt-16 rounded-2xl py-10 px-6 backdrop-blur-md bg-white/10 shadow-lg shadow-violet-500/40 gap-6 relative">
-        {fields.map((f, i) => (
-          <div
-            key={i}
-            className="grid grid-cols-2 gap-6 items-center text-lg w-full"
-          >
-            <div className="text-gray-400">{f.label}</div>
-            <div className="font-semibold text-white">{f.value}</div>
+    <div className="flex flex-col items-center mt-2 px-4">
+      <div className="relative w-full max-w-md">
+        
+        <div className="absolute -inset-1 bg-linear-to-r from-violet-600 to-pink-600 rounded-2xl blur opacity-75"></div>
+        
+        {/* Card Content */}
+        <div className="relative bg-gray-900 rounded-2xl p-8 border border-white/10 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-linear-to-tr from-violet-500 to-fuchsia-500 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-lg shadow-violet-500/30">
+              👤
+            </div>
+            <h1 className="text-3xl font-bold text-white">{user.name}</h1>
+            <p className="text-gray-400 font-mono text-sm tracking-widest">{user.role === 'admin' ? 'ADMINISTRATOR' : 'REGISTERED VOTER'}</p>
           </div>
-        ))}
 
-        <button
-          className="bg-blue-600 text-white absolute -bottom-15 right-2 px-5 py-2 rounded-lg hover:bg-blue-500"
-          onClick={() => navigate("/changepassword")}
-        >
-          Change Password
-        </button>
+          <div className="space-y-4">
+            <InfoRow label="Aadhar ID" value={user.aadharCardNumber} font="font-mono" />
+            <InfoRow label="Email" value={user.email || 'N/A'} />
+            <InfoRow label="Mobile" value={user.mobile || 'N/A'} />
+            <InfoRow label="Age" value={`${user.age} Years`} />
+            
+            <div className="flex justify-between items-center py-3 border-b border-white/5">
+              <span className="text-gray-400">Voting Status</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${user.isVoted ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                {user.role==='admin'?"Admin Can't Vote":(user.isVoted ? "Has Voted" : "Not Voted")}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate("/changepassword")}
+            className="w-full mt-8 border border-white/20 hover:bg-white/5 text-white py-2 rounded-xl transition-colors text-sm font-medium"
+          >
+            Change Password
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
+
+
 
 export default Profile;

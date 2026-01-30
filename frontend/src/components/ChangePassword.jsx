@@ -1,83 +1,64 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 export default function ChangePassword() {
-    const [data, setData] = useState({ currentPassword: "", newPassword: "" });
-    const navigate = useNavigate();
-  const [message, setMessage] = useState("");
-  const [changed, setChanged] = useState(false);
-  const api = "http://localhost:3002/user/profile/password";
-
-  const isDisabled = !(data.currentPassword && data.newPassword);
+  const [data, setData] = useState({ currentPassword: "", newPassword: "" });
+  const navigate = useNavigate();
+  const token = useSelector(state => state.user.token);
 
   async function handleForm(e) {
     e.preventDefault();
+    const loadToast = toast.loading('Updating password...');
     try {
-      const response = await fetch(api, {
+      const response = await fetch("http://localhost:3002/user/profile/password", {
         method: "PUT",
         body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-          authorization: localStorage.getItem("token"),
-        },
+        headers: { "Content-Type": "application/json", authorization: token },
       });
       const result = await response.json();
+      
       if (result.success) {
-        setChanged(true);
-          setData({ currentPassword: "", newPassword: "" });
-          setTimeout(() => {
-            navigate('/profile')  
-          },1000)
+        toast.success("Password Updated!", { id: loadToast });
+        setData({ currentPassword: "", newPassword: "" });
+        setTimeout(() => navigate('/profile'), 1000);
+      } else {
+        throw new Error(result.message);
       }
-      setMessage(result.message);
     } catch (err) {
-      setMessage("Error updating password");
+      toast.error(err.message || "Update failed", { id: loadToast });
     }
   }
 
   return (
-    <form
-      onSubmit={handleForm}
-      className="flex flex-col items-center py-5 px-10 gap-5 rounded-2xl shadow shadow-violet-300 max-w-lg mx-auto"
-    >
-      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-violet-600 to-pink-400">
-        Change Password
-      </h1>
-      <input
-        type="password"
-        name="currentPassword"
-        placeholder="Enter Current Password"
-        value={data.currentPassword}
-        onChange={(e) => setData({ ...data, currentPassword: e.target.value })}
-        className="border px-3 py-1 rounded-xl text-violet-500 w-full"
-      />
-      <input
-        type="password"
-        name="newPassword"
-        placeholder="Enter New Password"
-        value={data.newPassword}
-        onChange={(e) => setData({ ...data, newPassword: e.target.value })}
-        className="border px-3 py-1 rounded-xl text-violet-500 w-full"
-      />
-      <button
-        disabled={isDisabled}
-        className={`border px-3 py-1 rounded-xl w-full ${
-          isDisabled
-            ? "bg-violet-400"
-            : "bg-violet-700 hover:bg-violet-900 cursor-pointer"
-        }`}
-      >
-        Change Password
-      </button>
-      {message && (
-        <div
-          className={`border rounded-md text-center py-1 px-2 w-full mt-4 ${
-            changed ? "text-green-700" : "text-red-700"
-          }`}
-        >
-          {message}
-        </div>
-      )}
-    </form>
+    <div className="flex justify-center items-center min-h-[70vh]">
+      <div className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8">
+        <h1 className="text-2xl font-bold text-center mb-6 text-white">Security Settings</h1>
+        <form onSubmit={handleForm} className="space-y-4">
+          <input
+            type="password"
+            placeholder="Current Password"
+            value={data.currentPassword}
+            onChange={(e) => setData({ ...data, currentPassword: e.target.value })}
+            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+          />
+          
+          <input
+            type="password"
+            placeholder="New Password"
+            value={data.newPassword}
+            onChange={(e) => setData({ ...data, newPassword: e.target.value })}
+            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+          />
+          <button 
+            disabled={!data.currentPassword || !data.newPassword}
+            className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold py-3 rounded-xl transition-all"
+          >
+            Update Password
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

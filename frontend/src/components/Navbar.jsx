@@ -1,59 +1,60 @@
-import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
+import { setLogin, setUser, setToken } from '../app/slice/user'; // Ensure these are exported from slice
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("login"));
-  }, []);
+  const dispatch = useDispatch();
+  const { isLogin, user } = useSelector(state => state.user);
+  const isAdmin = user?.role === 'admin';
 
   const handleLogout = () => {
     localStorage.clear();
-    setIsLoggedIn(false);
+    dispatch(setLogin()); 
+    dispatch(setUser(null));
+    dispatch(setToken(null));
     navigate("/login");
   };
 
-  const linkClasses = ({ isActive }) =>
-    `hover:bg-violet-500 hover:text-white h-15 pt-5 px-2 lg:px-6 md:px-4 rounded-xl ${
-      isActive ? "bg-violet-500 text-white" : ""
+  const navLinkClass = ({ isActive }) =>
+    `px-4 py-2 rounded-lg transition-all duration-300 font-medium ${
+      isActive 
+        ? "bg-violet-600 text-white shadow-lg shadow-violet-500/30" 
+        : "text-gray-300 hover:text-white hover:bg-white/10"
     }`;
 
   return (
-    <nav className="flex justify-between py-1 px-2 sm:px-10 bg-violet-900 h-16 items-center">
-      <NavLink to="/" className="text-white font-bold text-3xl">
-        Voting App
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10 h-16 flex items-center justify-between px-4 lg:px-10 shadow-sm">
+      <NavLink to="/" className="text-2xl font-bold bg-linear-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+        KS VOTING APP
       </NavLink>
 
-      {isLoggedIn ? (
-        <div className="flex gap-5 text-xl text-gray-300 font-semibold items-center">
-          <NavLink to="/profile" className={linkClasses}>
-            Profile
-          </NavLink>
-          <NavLink to="/vote" className={linkClasses}>
-            Vote
-          </NavLink>
-          <button
-            onClick={handleLogout}
-            className="hover:bg-violet-500 hover:text-white h-15 px-2 lg:px-6 md:px-4 rounded-xl cursor-pointer"
-          >
-            Logout
-          </button>
-        </div>
-      ) : (
-        <div className="flex gap-1 text-xl text-gray-300 font-semibold">
-          <NavLink to="/candidates" className={linkClasses}>
-            Candidates
-          </NavLink>
-          <NavLink to="/login" className={linkClasses}>
-            Login
-          </NavLink>
-          <NavLink to="/register" className={linkClasses}>
-            Register
-          </NavLink>
-        </div>
-      )}
+      <div className="flex items-center gap-2 md:gap-4">
+      <NavLink to="/candidates" className={navLinkClass}>Candidates</NavLink>
+        {isLogin ? (
+          <>
+            {isAdmin ? (
+              <>
+                <NavLink to="/voter-list" className={navLinkClass}>Voters</NavLink>
+              </>
+            ) : (
+              <NavLink to="/vote" className={navLinkClass}>Vote</NavLink>
+            )}
+            <NavLink to="/profile" className={navLinkClass}>Profile</NavLink>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white transition-all duration-300 ml-2"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className={navLinkClass}>Login</NavLink>
+            <NavLink to="/register" className={navLinkClass}>Register</NavLink>
+          </>
+        )}
+      </div>
     </nav>
   );
 };

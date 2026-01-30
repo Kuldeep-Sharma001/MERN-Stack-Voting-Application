@@ -1,73 +1,91 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "../app/slice/user";
 
 export default function Vote() {
   const [candidates, setCandidates] = useState([]);
-  const [message, setMessage] = useState("");
-
-  // Fetch candidates
+  const token = useSelector(state => state.user.token);
+  const voterId = useSelector(state=>state.user?.user?._id);
+  const dispatch = useDispatch();
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:3002/user/allCandidates");
+      const response = await fetch("http://localhost:3002/all-candidates");
       const result = await response.json();
-      setCandidates(result);
+      setCandidates(result.candidates);
     } catch (err) {
-      console.error("Error fetching candidates:", err);
+      console.error(err);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [message]); // only refetch when message changes
+  const updateVoterDetails = async()=>{
+    try{
+      const response = await fetch(`http://localhost:3002/user/get-voter/${voterId}`,{
+        method:'GET',
+        headers:{authorization:token},}
+      )
+      const result = await response.json();
+      if(result.success){
+        dispatch(setUser(result.voter));
+        localStorage.setItem('userv',JSON.stringify(result.voter));
+      }else{
+        throw new Error(result.message);
+      }
+    }catch(error){
+      toast.error(error.message);
+    }
+  }
 
-  // Handle vote
+  useEffect(() => { fetchData(); }, []);
+
   const handleVote = async (id) => {
+    const loadingToast = toast.loading("Casting vote...");
     try {
       const response = await fetch(`http://localhost:3002/user/vote/${id}`, {
         method: "POST",
-        headers: {
-          authorization: localStorage.getItem("token"),
-        },
+        headers: { authorization: token },
       });
       const result = await response.json();
-      setMessage(result.message);
-
-      setTimeout(() => setMessage(""), 3000);
+      
+      if(result.success) {
+         toast.success(result.message, { id: loadingToast });
+         fetchData(); // Refresh Data
+         updateVoterDetails();
+      } else {
+         toast.error(result.message, { id: loadingToast });
+      }
     } catch (err) {
-      console.error("Error voting:", err);
+      toast.error("Failed to vote", { id: loadingToast });
     }
   };
-
   return (
-    <div className="text-white my-10 mx-auto items-center w-[95vw] max-w-[600px] relative">
-      {message && (
-        <div className="w-full mx-auto text-center bg-gray-600 p-3 text-xl border-orange-600 border-2 rounded-lg text-orange-400 font-bold absolute top-[40%]">
-          {message}
-        </div>
-      )}
-
-      <div className="grid grid-cols-[4fr_2fr_2fr_2fr] text-2xl text-red-500 font-semibold">
-        <div>Candidate Name</div>
-        <div>Party</div>
-        <div>Count</div>
-        <div>Vote</div>
+    <div className="max-w-5xl mx-auto mt-10 p-4 ">
+      <h1 className="text-4xl font-bold text-center mb-10 bg-linear-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+        Cast Your Vote
+      </h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {candidates?.map((candidate) => (
+          <div key={candidate._id} className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl hover:border-violet-500/50 transition-all hover:scale-[1.02] shadow-xl">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-2xl font-bold text-white">{candidate.name}</h3>
+                <p className="text-violet-400 font-medium">{candidate.party}</p>
+              </div>
+              <div className="bg-white/10 px-3 py-1 rounded-lg text-sm font-mono text-center">
+                {candidate.voteCount} Votes
+              </div>
+            </div>
+            
+            <button
+              onClick={() => handleVote(candidate._id)}
+              className="w-full mt-4 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95"
+            >
+              Vote for {candidate.name.split(' ')[0]}
+            </button>
+          </div>
+        ))}
       </div>
-
-      {candidates.map((candidate) => (
-        <div
-          key={candidate.id}
-          className="grid grid-cols-[4fr_2fr_2fr_2fr] py-2 text-xl w-full mx-auto"
-        >
-          <div>{candidate.name}</div>
-          <div>{candidate.party}</div>
-          <div>{candidate.votes}</div>
-          <button
-            className="border py-1 rounded-xl border-orange-950 hover:bg-orange-900 cursor-pointer bg-orange-600"
-            onClick={() => handleVote(candidate.id)}
-          >
-            Vote
-          </button>
-        </div>
-      ))}
     </div>
   );
 }
