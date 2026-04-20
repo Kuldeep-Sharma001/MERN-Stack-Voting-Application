@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 export default function Home() {
   const navigate = useNavigate();
   const isLogin = useSelector((state) => state.user.isLogin);
+  const role = useSelector((state) => state.user.user?.role);
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-8rem)] px-6 lg:px-20 py-10 max-w-7xl mx-auto">
       {/* Text Section */}
@@ -27,7 +28,7 @@ export default function Home() {
               Get Started
             </button>
           )}
-          {isLogin && (
+          {(isLogin && role!=='admin') && (
             <button 
               onClick={() => navigate('/vote')}
               className="bg-linear-to-r from-violet-600 to-indigo-600 text-white font-bold px-8 py-3 rounded-full hover:shadow-lg transition-all shadow-violet-500/30 active:scale-95"
